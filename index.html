@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BPM · Semana 11 · UPN</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Public+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--g:#FFC20E;--bg:#0B0B0B;--c:#171717;--l:#2c2c2c;--t:#F2F2F2;--m:#A8A8A8;--ok:#5FD68A;--no:#FF8A80}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--t);font:17px/1.5 'Public Sans',system-ui,Arial,sans-serif}
+header{background:var(--g);color:#000;padding:8px 20px;display:flex;justify-content:space-between;align-items:center}
+header b{font-family:'Barlow Condensed',sans-serif;font-size:22px;letter-spacing:.5px}header small{font-weight:600}
+main{max-width:1100px;margin:16px auto;padding:0 12px}
+img.sl{width:100%;display:block;border:1px solid var(--l);background:#000;aspect-ratio:16/9}
+.card{background:var(--c);border:1px solid var(--l);border-top:4px solid var(--g);border-radius:6px;padding:20px 24px;margin-top:14px}
+h1,h2{font-family:'Barlow Condensed',sans-serif;margin:0 0 10px}h1{font-size:40px}h2{font-size:26px;color:var(--g)}
+input,textarea,select{font:inherit;color:var(--t);background:#0f0f0f;padding:9px 11px;border:1px solid #555;border-radius:6px;width:100%;margin:4px 0 10px}
+select{width:auto;min-width:220px;max-width:100%}
+button{font:inherit;font-weight:600;padding:9px 16px;border:0;border-radius:6px;background:var(--g);color:#000;cursor:pointer}
+button.g{background:transparent;color:var(--t);border:1px solid #777}button:disabled{opacity:.4}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.ok{color:var(--ok);font-weight:600}.no{color:var(--no);font-weight:600}.mu{color:var(--m);font-size:14px}
+.it{border-top:1px solid var(--l);padding:10px 0}.it p{margin:0 0 6px;max-width:75ch}
+table{border-collapse:collapse;width:100%;font-size:15px}td,th{border:1px solid #444;padding:6px 9px;text-align:left}
+.nube span{display:inline-block;margin:4px 10px;font-family:'Barlow Condensed',sans-serif;font-weight:700;color:var(--g)}
+.num{font-family:'Barlow Condensed',sans-serif;font-size:24px}
+</style></head><body>
+<header><b>UNIVERSIDAD PRIVADA DEL NORTE</b><small id="who"></small></header>
+<main id="app"></main>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+firebase.initializeApp({databaseURL:"https://bpm-s11-default-rtdb.firebaseio.com"});
+const db=firebase.database(),$=s=>document.querySelector(s),A=$('#app'),NS=22;
+const E=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const F=['Fórmula','Fuente','Cohorte','Frecuencia','Meta','Responsable','Acción'];
+const ACT={
+2:{t:'nube',h:'Nube de palabras'},
+5:{t:'sel',p:20,h:'Relacione cada fase con su evidencia',o:['Versión y trazabilidad','Casos y resultados','Incidentes y ajustes','Casos reales y monitoreo'],i:[['Desarrollo',0],['Pruebas',1],['Piloto',2],['Producción',3]]},
+7:{t:'sel',p:20,h:'Verdadero o falso',o:['Verdadero','Falso'],j:'Justifique la afirmación 1 con un ejemplo de su proceso:',i:[['“Capacitación realizada” equivale a operadores listos.',1],['Una simulación puede presentarse como resultado real.',1],['La meta de servicio y el límite de control describen lo mismo.',1],['Un defecto crítico de autorización puede impedir el lanzamiento aunque otros indicadores cumplan.',0]]},
+9:{t:'sel',p:20,h:'Ordene la respuesta ante un incidente crítico (1 = primero)',o:['1','2','3','4','5'],i:[['Recuperar',3],['Detectar',0],['Reconciliar',4],['Contener',1],['Alternar',2]]},
+11:{t:'sel',p:20,h:'¿Qué campo falta en cada ficha de indicador?',o:F,i:[['Fórmula: cerradas en ≤24 h / cerradas × 100. Cohorte: compras cerradas del mes. Frecuencia: semanal. Meta: ≥90 %. Responsable: dueño. Acción: escalar vencidos.',1],['Fórmula: devoluciones / cerradas × 100. Fuente: campo “devolución” del BPM. Frecuencia: semanal. Meta: ≤5 %. Responsable: analista. Acción: revisar causas.',2],['Fórmula: suma de tiempos / cerradas. Fuente: registro BPM. Cohorte: cerradas del mes. Frecuencia: diaria. Meta: ≤24 h. Responsable: dueño.',6],['Fórmula: vencidos / abiertos × 100. Fuente: cola BPM. Cohorte: abiertos de hoy. Frecuencia: diaria. Responsable: supervisor. Acción: reasignar.',4]]},
+15:{t:'txt',h:'PDCA de su proceso (converse con su grupo y responda)',f:['P · Planificar: hipótesis y causa','D · Hacer: prueba a pequeña escala','C · Verificar: comparación y cohortes','A · Actuar: estandarizar o ajustar']},
+20:{t:'sel',p:20,h:'Quiz final',i:[
+['El TO BE está listo cuando…',2,['el diagrama BPMN está aprobado','la capacitación fue realizada','personas, reglas, datos, tecnología y soporte funcionan juntos','las pruebas se ejecutaron una vez']],
+['El lanzamiento lo autoriza…',0,['el dueño del proceso, con evidencia y riesgo explícito','el equipo de TI','el analista BPM','los operadores']],
+['Controlar combina…',3,['solo seguimiento diario','solo indicadores de meta','solo auditoría','intervención operativa y evaluación histórica por cohortes']],
+['Un KPI sin fórmula, fuente, cohorte, responsable y acción…',1,['igual guía decisiones','no orienta decisiones','es válido si tiene meta','solo sirve para reportes']],
+['La mejora exige…',2,['aplicar el cambio a todo el proceso','esperar a que falle','hipótesis, prueba acotada, comparación válida y estandarización','comparar cohortes distintas']]]}
+};
+const SC=[5,7,9,11,20];
+let sala,me,tch=false,ref,st={},loc=0,R={},N={};
+const up=s=>s.trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
+function home(){A.innerHTML=`<div class="card"><h1>Ingreso a la sesión</h1>
+<label>Código de sala<input id="sl" autocomplete="off"></label>
+<label>Código de estudiante<input id="cd" autocomplete="off"></label>
+<label>Nombres y apellidos<input id="nm"></label>
+<label>Grupo<select id="gr">${[1,2,3,4,5,6,7,8].map(g=>`<option>${g}</option>`).join('')}</select></label>
+<button id="go">Entrar</button> <button class="g" id="tc">Soy docente</button>
+<p class="mu">Ing. Danny Herrera Nájar.</p></div>`;
+$('#go').onclick=()=>{const s=up($('#sl').value),c=up($('#cd').value),n=$('#nm').value.trim();
+ if(!s||!c||!n)return alert('Complete sala, código y nombre.');me={c,n,g:$('#gr').value};start(s)};
+$('#tc').onclick=()=>{const s=up($('#sl').value);if(!s)return alert('Escriba el código de sala.');
+ const p=prompt('Clave docente (si la sala es nueva, esta será su clave):');if(!p)return;
+ db.ref('salas/'+s+'/pin').once('value').then(v=>{if(v.val()===null)db.ref('salas/'+s+'/pin').set(p);else if(v.val()!==p)return alert('Clave incorrecta.');tch=true;start(s)})}}
+function start(s){sala=s;ref=db.ref('salas/'+s);$('#who').textContent=(tch?'Docente':me.n+' · G'+me.g)+' · sala '+s;
+ ref.child('estado').on('value',v=>{st=v.val()||{};draw()});
+ ref.child('nube').on('value',v=>{N=v.val()||{};if(st.act)draw()});
+ if(tch)ref.child('resp').on('value',v=>{R=v.val()||{};draw()})}
+function nube(){const c={};Object.values(N).forEach(w=>c[w]=(c[w]||0)+1);const m=Math.max(1,...Object.values(c));
+ return`<div class="nube">${Object.entries(c).map(([w,k])=>`<span style="font-size:${20+k/m*34}px">${E(w)}</span>`).join('')||'<span class="mu">Aún sin palabras.</span>'}</div>`}
+const key=n=>'r'+sala+(me?me.c:'')+n;
+const opts=(a,it)=>it[2]||a.o;
+function act(i){const n=i+1,a=ACT[n];if(!a||tch)return'';const open=st.act&&st.act[n],rev=st.rev&&st.rev[n];
+ const h=`<div class="card"><h2>${a.h}${a.p?' ('+a.p+' puntos)':''}</h2>`;if(!open)return h+'<p class="mu">Actividad aún no abierta.</p></div>';
+ const raw=sessionStorage[key(n)],d=raw?JSON.parse(raw):null;
+ if(a.t==='nube')return h+(d?'<p class="ok">Enviado. Nube del grupo:</p>':`<input id="w1" maxlength="30" placeholder="Palabra 1"><input id="w2" maxlength="30" placeholder="Palabra 2"><input id="w3" maxlength="30" placeholder="Palabra 3"><button id="sn">Enviar</button>`)+nube()+'</div>';
+ if(a.t==='txt')return h+a.f.map((f,k)=>`<label>${f}<textarea id="t${k}" rows="2" ${d?'disabled':''}>${d?E(d[k]):''}</textarea></label>`).join('')+(d?'<p class="ok">Enviado.</p>':'<button id="sv">Enviar</button>')+'</div>';
+ let p=0;const body=a.i.map((it,k)=>{const o=opts(a,it),ok=d&&d.a[k]===it[1];if(ok)p+=a.p/a.i.length;
+  return`<div class="it"><p>${k+1}. ${E(it[0])}</p><select id="s${k}" ${d?'disabled':''}><option value="-1">— elegir —</option>${o.map((x,j)=>`<option value="${j}" ${d&&d.a[k]===j?'selected':''}>${E(x)}</option>`).join('')}</select>${rev&&d?` <span class="${ok?'ok':'no'}">${ok?'Correcto':'Correcta: '+E(o[it[1]])}</span>`:''}</div>`}).join('');
+ return h+body+(a.j?`<p>${a.j}</p><textarea id="ju" rows="3" ${d?'disabled':''}>${d?E(d.j||''):''}</textarea>`:'')+(d?`<p class="ok">Enviado.${rev?' Su puntaje: '+Math.round(p*10)/10+'/'+a.p:''}</p>`:'<button id="sv">Enviar respuestas</button>')+'</div>'}
+function bind(i){const n=i+1,a=ACT[n];if(!a||tch)return;
+ if(a.t==='nube'&&$('#sn'))$('#sn').onclick=()=>{[1,2,3].map(k=>$('#w'+k).value.trim().toLowerCase()).filter(Boolean).forEach(w=>ref.child('nube').push(w));sessionStorage[key(n)]='1';draw()};
+ if(!$('#sv'))return;
+ $('#sv').onclick=()=>{
+  if(a.t==='txt'){const f=a.f.map((_,k)=>$('#t'+k).value.trim());if(f.includes(''))return alert('Complete los cuatro campos.');
+   ref.child(`resp/${n}/${me.c}`).set({c:me.c,n:me.n,g:me.g,f});sessionStorage[key(n)]=JSON.stringify(f);return draw()}
+  const v=a.i.map((_,k)=>+$('#s'+k).value);if(v.includes(-1))return alert('Responda todas las preguntas.');
+  const p=Math.round(v.reduce((s,x,k)=>s+(x===a.i[k][1]?a.p/a.i.length:0),0)*10)/10;
+  ref.child(`resp/${n}/${me.c}`).set({c:me.c,n:me.n,g:me.g,a:v,j:$('#ju')?$('#ju').value.trim():'',p});
+  sessionStorage[key(n)]=JSON.stringify({a:v,j:$('#ju')?$('#ju').value.trim():''});draw()}}
+function ctl(i){const n=i+1,a=ACT[n],o=st.act&&st.act[n],r=st.rev&&st.rev[n];
+ return`<div class="bar"><button class="g" id="pv">◀</button><span class="num">${n}/${NS}</span><button class="g" id="nx">▶</button>
+ ${a?`<button id="ao">${o?'Cerrar actividad':'Abrir actividad'}</button>`:''}${a&&a.p?`<button class="g" id="rv">${r?'Ocultar solución':'Revelar solución'}</button>`:''}
+ <button class="g" id="lb">Modo libre: ${st.libre?'sí':'no'}</button><button class="g" id="ex">Exportar CSV</button></div>`}
+function tres(i){const n=i+1,a=ACT[n];if(!a)return'';const r=Object.values(R[n]||{});let b='';
+ if(a.t==='nube')b=nube();
+ else if(a.t==='txt')b=[1,2,3,4,5,6,7,8].map(g=>{const x=r.filter(y=>y.g==g);return x.length?`<h3>Grupo ${g} (${x.length})</h3><ul>${x.map(y=>`<li>${E(y.n)}: ${a.f.map((_,k)=>E(y.f[k])).join(' | ')}</li>`).join('')}</ul>`:''}).join('')||'<p class="mu">Sin respuestas.</p>';
+ else b=`<table><tr><th>Ítem</th><th>% correcto</th></tr>${a.i.map((it,k)=>`<tr><td>${k+1}. ${E(it[0].slice(0,70))}</td><td>${r.length?Math.round(100*r.filter(x=>x.a[k]===it[1]).length/r.length):0} %</td></tr>`).join('')}</table>`+(a.j?`<h3>Justificaciones</h3><ul>${r.filter(x=>x.j).map(x=>`<li>G${x.g}: ${E(x.j)}</li>`).join('')}</ul>`:'');
+ return`<div class="card"><h2>${a.h} · ${r.length} respuestas</h2>${b}</div>`}
+function csv(){const ids={};[...SC,15].forEach(n=>Object.values(R[n]||{}).forEach(x=>ids[x.c]=x));
+ const rows=[['codigo','nombre','grupo',...SC.map(n=>'p_diap'+n),'total','justificacion_diap7','pdca_diap15']];
+ Object.keys(ids).sort().forEach(c=>{const g=n=>(R[n]||{})[c],ps=SC.map(n=>g(n)?g(n).p:0);
+  rows.push([c,ids[c].n,ids[c].g,...ps,Math.round(ps.reduce((a,b)=>a+b,0)*10)/10,g(7)?g(7).j:'',g(15)?g(15).f.join(' | '):''])});
+ const t=rows.map(l=>l.map(c=>'"'+String(c??'').replace(/"/g,'""')+'"').join(',')).join('\n');
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+t],{type:'text/csv'}));a.download='resultados_'+sala+'.csv';a.click()}
+function draw(){if(!ref)return;const keep={};A.querySelectorAll('input,textarea,select').forEach(e=>{if(e.id)keep[e.id]=e.value});const f0=document.activeElement&&document.activeElement.id;
+ const i=tch?(st.i||0):(st.libre?loc:(st.i||0));
+ A.innerHTML=(tch?ctl(i):(st.libre?'<div class="bar"><button class="g" id="pv">◀</button><button class="g" id="nx">▶</button></div>':''))+`<img class="sl" src="slides/s${i+1}.webp" alt="Diapositiva ${i+1}">`+act(i)+(tch?tres(i):'');
+ Object.keys(keep).forEach(k=>{const e=document.getElementById(k);if(e&&!e.disabled&&keep[k]!==''&&keep[k]!=='-1')e.value=keep[k]});
+ if(f0&&/^(w\d|ju|t\d)$/.test(f0)&&document.getElementById(f0))document.getElementById(f0).focus();
+ const go=d=>{const j=Math.max(0,Math.min(NS-1,(tch?(st.i||0):loc)+d));if(tch)ref.child('estado/i').set(j);else{loc=j;draw()}};
+ if($('#pv')){$('#pv').onclick=()=>go(-1);$('#nx').onclick=()=>go(1)}
+ if(tch){$('#lb').onclick=()=>ref.child('estado/libre').set(!st.libre);$('#ex').onclick=csv;
+  if($('#ao'))$('#ao').onclick=()=>ref.child('estado/act/'+(i+1)).set(!(st.act&&st.act[i+1]));
+  if($('#rv'))$('#rv').onclick=()=>ref.child('estado/rev/'+(i+1)).set(!(st.rev&&st.rev[i+1]))}
+ bind(i)}
+document.addEventListener('keydown',e=>{if(!tch||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;
+ const j=Math.max(0,Math.min(NS-1,(st.i||0)+(e.key==='ArrowRight'?1:e.key==='ArrowLeft'?-1:0)));if(/Arrow(Right|Left)/.test(e.key))ref.child('estado/i').set(j)});
+home();
+</script></body></html>
