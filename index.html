@@ -21,6 +21,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .it{border-top:1px solid var(--l);padding:10px 0}.it p{margin:0 0 6px;max-width:75ch}
 table{border-collapse:collapse;width:100%;font-size:15px}td,th{border:1px solid #444;padding:6px 9px;text-align:left}
 .nube span{display:inline-block;margin:4px 10px;font-family:'Barlow Condensed',sans-serif;font-weight:700;color:var(--g)}
+.br{background:#2c2c2c;height:14px;border-radius:7px;margin:6px 0 14px}.br i{display:block;height:100%;background:var(--g);border-radius:7px}
 .num{font-family:'Barlow Condensed',sans-serif;font-size:24px}
 </style></head><body>
 <header><b>UNIVERSIDAD PRIVADA DEL NORTE</b><small id="who"></small></header>
@@ -47,7 +48,7 @@ const ACT={
 ['El retrabajo bajó de 20 % a 12 % en un piloto que solo incluyó compras pequeñas. En la fase Verificar, ¿qué debe hacer el equipo antes de estandarizar?',0,['Comparar con cohortes equivalentes y descartar que la mejora se deba al tipo de compra.','Estandarizar de inmediato, porque la reducción ya es de ocho puntos porcentuales.','Ampliar el piloto a todo el proceso y comparar contra la línea base original.','Replantear la hipótesis y descartar el resultado del piloto.']]]}
 };
 const SC=[5,7,9,11,20];
-let sala,me,tch=false,ref,st={},loc=0,R={},N={};
+let vw=0,lis=0,sala,me,tch=false,ref,st={},loc=0,R={},N={};
 const up=s=>s.trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
 function home(){A.innerHTML=`<div class="card"><h1>Ingreso a la sesión</h1>
 <label>Código de sala<input id="sl" autocomplete="off"></label>
@@ -89,10 +90,23 @@ function bind(i){const n=i+1,a=ACT[n];if(!a||tch)return;
   const p=Math.round(v.reduce((s,x,k)=>s+(x===a.i[k][1]?a.p/a.i.length:0),0)*10)/10;
   ref.child(`resp/${n}/${me.c}`).set({c:me.c,n:me.n,g:me.g,a:v,j:$('#ju')?$('#ju').value.trim():'',p});
   sessionStorage[key(n)]=JSON.stringify({a:v,j:$('#ju')?$('#ju').value.trim():''});draw()}}
+const T={5:[['Fases, responsables y evidencias del despliegue',5]],7:[['Capacitación frente a operadores listos',7],['Propuesta, simulación y evidencia real',18],['Meta frente a límite de control',11],['Criterio de autorización del lanzamiento',8]],9:[['Secuencia de contingencia ante un incidente',9]],11:[['Campos de la ficha de indicador',11]],20:[['Criterios para considerar listo el TO BE',4],['Decisión de lanzamiento con evidencia',14],['Seguimiento operativo frente a evaluación histórica',10],['Meta frente a límite de control',11],['Verificar con cohortes equivalentes (PDCA)',15]]};
+function dash(){
+ if(!st.pub)return'<div class="card"><h2>Mis resultados</h2><p class="mu">El docente publicará los resultados al finalizar la sesión.</p></div>';
+ const mine=n=>(R[n]||{})[me.c],tot=c=>SC.reduce((s,n)=>s+(((R[n]||{})[c]||{}).p||0),0),mates=new Set();
+ SC.forEach(n=>Object.values(R[n]||{}).forEach(x=>{if(x.g==me.g)mates.add(x.c)}));
+ const avg=a=>a.length?Math.round(a.reduce((s,x)=>s+x,0)/a.length*10)/10:0,my=Math.round(tot(me.c)*10)/10,ga=avg([...mates].map(tot));
+ const rows=SC.map(n=>{const g=Object.values(R[n]||{}).filter(x=>x.g==me.g).map(x=>x.p),m=mine(n);return`<tr><td>Diapositiva ${n}</td><td>${m?m.p:0} / 20</td><td>${avg(g)} / 20</td></tr>`}).join('');
+ const rev={};SC.forEach(n=>{const m=mine(n);ACT[n].i.forEach((it,k)=>{if(!m||m.a[k]!==it[1]){const t=T[n].length===1?T[n][0]:T[n][k];rev[t[1]+t[0]]=t}})});
+ const rl=Object.values(rev).sort((a,b)=>a[1]-b[1]);
+ return`<div class="card"><h2>Mis resultados</h2><p class="num">${my} / 100 <span class="mu">· promedio del grupo ${me.g}: ${ga} (${mates.size} integrantes con resultados)</span></p>
+ <div class="br"><i style="width:${my}%"></i></div>
+ <table><tr><th>Actividad</th><th>Mi puntaje</th><th>Promedio del grupo</th></tr>${rows}</table>
+ <h2 style="margin-top:16px">Para repasar</h2>${rl.length?`<ul>${rl.map(t=>`<li>${t[0]} · diapositiva ${t[1]} <button class="g" data-v="${t[1]}">Ver</button></li>`).join('')}</ul>`:'<p class="ok">No quedan temas pendientes. Excelente trabajo.</p>'}</div>`}
 function ctl(i){const n=i+1,a=ACT[n],o=st.act&&st.act[n],r=st.rev&&st.rev[n];
  return`<div class="bar"><button class="g" id="pv">◀</button><span class="num">${n}/${NS}</span><button class="g" id="nx">▶</button>
  ${a?`<button id="ao">${o?'Cerrar actividad':'Abrir actividad'}</button>`:''}${a&&a.p?`<button class="g" id="rv">${r?'Ocultar solución':'Revelar solución'}</button>`:''}
- ${a&&a.p&&o?`<button class="g" id="mo">${st.mostrar&&st.mostrar[n]?'Ocultar diapositiva':'Mostrar diapositiva'}</button>`:''}<button class="g" id="lb">Modo libre: ${st.libre?'sí':'no'}</button><button class="g" id="ex">Exportar CSV</button></div>`}
+ ${a&&a.p&&o?`<button class="g" id="mo">${st.mostrar&&st.mostrar[n]?'Ocultar diapositiva':'Mostrar diapositiva'}</button>`:''}${n===22?`<button id="pb">${st.pub?'Ocultar resultados':'Publicar resultados'}</button>`:''}<button class="g" id="lb">Modo libre: ${st.libre?'sí':'no'}</button><button class="g" id="ex">Exportar CSV</button></div>`}
 function tres(i){const n=i+1,a=ACT[n];if(!a)return'';const r=Object.values(R[n]||{});let b='';
  if(a.t==='nube')b=nube();
  else if(a.t==='txt')b=[1,2,3,4,5,6,7,8].map(g=>{const x=r.filter(y=>y.g==g);return x.length?`<h3>Grupo ${g} (${x.length})</h3><ul>${x.map(y=>`<li>${E(y.n)}: ${a.f.map((_,k)=>E(y.f[k])).join(' | ')}</li>`).join('')}</ul>`:''}).join('')||'<p class="mu">Sin respuestas.</p>';
@@ -106,15 +120,18 @@ function csv(){const ids={};[...SC,15].forEach(n=>Object.values(R[n]||{}).forEac
  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+t],{type:'text/csv'}));a.download='resultados_'+sala+'.csv';a.click()}
 function draw(){if(!ref)return;const keep={};A.querySelectorAll('input,textarea,select').forEach(e=>{if(e.id)keep[e.id]=e.value});const f0=document.activeElement&&document.activeElement.id;
  const i=tch?(st.i||0):(st.libre&&!hid((st.i||0)+1)?loc:(st.i||0));
- A.innerHTML=(tch?ctl(i):(st.libre?'<div class="bar"><button class="g" id="pv">◀</button><button class="g" id="nx">▶</button></div>':''))+(hid(i+1)?'<div class="card"><h2>Actividad en curso</h2><p>Responda sin consultar la diapositiva. Se mostrará cuando el docente revele la solución.</p></div>':`<img class="sl" src="slides/s${i+1}.webp" alt="Diapositiva ${i+1}">`)+act(i)+(tch?tres(i):'');
+ A.innerHTML=(tch?ctl(i):(st.libre?'<div class="bar"><button class="g" id="pv">◀</button><button class="g" id="nx">▶</button></div>':''))+(hid(i+1)?'<div class="card"><h2>Actividad en curso</h2><p>Responda sin consultar la diapositiva. Se mostrará cuando el docente revele la solución.</p></div>':`<img class="sl" src="slides/s${i+1}.webp" alt="Diapositiva ${i+1}">`)+act(i)+(i===21&&!tch?(vw?`<div class="card"><img class="sl" src="slides/s${vw}.webp" alt="Diapositiva ${vw}"><p><button id="cv">Cerrar</button></p></div>`:'')+dash():'')+(tch?tres(i):'');
+ if(!tch&&st.pub&&!lis){lis=1;ref.child('resp').on('value',v=>{R=v.val()||{};draw()})}
  Object.keys(keep).forEach(k=>{const e=document.getElementById(k);if(e&&!e.disabled&&keep[k]!==''&&keep[k]!=='-1')e.value=keep[k]});
  if(f0&&/^(w\d|ju|t\d)$/.test(f0)&&document.getElementById(f0))document.getElementById(f0).focus();
  const go=d=>{const j=Math.max(0,Math.min(NS-1,(tch?(st.i||0):loc)+d));if(tch)ref.child('estado/i').set(j);else{loc=j;draw()}};
  if($('#pv')){$('#pv').onclick=()=>go(-1);$('#nx').onclick=()=>go(1)}
  if(tch){$('#lb').onclick=()=>ref.child('estado/libre').set(!st.libre);$('#ex').onclick=csv;
   if($('#ao'))$('#ao').onclick=()=>ref.child('estado/act/'+(i+1)).set(!(st.act&&st.act[i+1]));
+  if($('#pb'))$('#pb').onclick=()=>ref.child('estado/pub').set(!st.pub);
   if($('#mo'))$('#mo').onclick=()=>ref.child('estado/mostrar/'+(i+1)).set(!(st.mostrar&&st.mostrar[i+1]));
   if($('#rv'))$('#rv').onclick=()=>ref.child('estado/rev/'+(i+1)).set(!(st.rev&&st.rev[i+1]))}
+ document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{vw=+b.dataset.v;draw()});if($('#cv'))$('#cv').onclick=()=>{vw=0;draw()};
  bind(i)}
 document.addEventListener('keydown',e=>{if(!tch||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;
  const j=Math.max(0,Math.min(NS-1,(st.i||0)+(e.key==='ArrowRight'?1:e.key==='ArrowLeft'?-1:0)));if(/Arrow(Right|Left)/.test(e.key))ref.child('estado/i').set(j)});
