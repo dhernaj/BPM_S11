@@ -34,17 +34,17 @@ const E=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"
 const F=['Fórmula','Fuente','Cohorte','Frecuencia','Meta','Responsable','Acción'];
 const ACT={
 2:{t:'nube',h:'Nube de palabras'},
-5:{t:'sel',p:20,h:'Relacione cada fase con su evidencia',o:['Versión y trazabilidad','Casos y resultados','Incidentes y ajustes','Casos reales y monitoreo'],i:[['Desarrollo',0],['Pruebas',1],['Piloto',2],['Producción',3]]},
+5:{t:'sel',p:20,sh:1,h:'Relacione cada fase con su evidencia',o:['Versión y trazabilidad','Casos y resultados','Incidentes y ajustes','Casos reales y monitoreo'],i:[['Desarrollo',0],['Pruebas',1],['Piloto',2],['Producción',3]]},
 7:{t:'sel',p:20,h:'Verdadero o falso',o:['Verdadero','Falso'],j:'Justifique la afirmación 1 con un ejemplo de su proceso:',i:[['“Capacitación realizada” equivale a operadores listos.',1],['Una simulación puede presentarse como resultado real.',1],['La meta de servicio y el límite de control describen lo mismo.',1],['Un defecto crítico de autorización puede impedir el lanzamiento aunque otros indicadores cumplan.',0]]},
 9:{t:'sel',p:20,h:'Ordene la respuesta ante un incidente crítico (1 = primero)',o:['1','2','3','4','5'],i:[['Recuperar',3],['Detectar',0],['Reconciliar',4],['Contener',1],['Alternar',2]]},
 11:{t:'sel',p:20,h:'¿Qué campo falta en cada ficha de indicador?',o:F,i:[['Fórmula: cerradas en ≤24 h / cerradas × 100. Cohorte: compras cerradas del mes. Frecuencia: semanal. Meta: ≥90 %. Responsable: dueño. Acción: escalar vencidos.',1],['Fórmula: devoluciones / cerradas × 100. Fuente: campo “devolución” del BPM. Frecuencia: semanal. Meta: ≤5 %. Responsable: analista. Acción: revisar causas.',2],['Fórmula: suma de tiempos / cerradas. Fuente: registro BPM. Cohorte: cerradas del mes. Frecuencia: diaria. Meta: ≤24 h. Responsable: dueño.',6],['Fórmula: vencidos / abiertos × 100. Fuente: cola BPM. Cohorte: abiertos de hoy. Frecuencia: diaria. Responsable: supervisor. Acción: reasignar.',4]]},
 15:{t:'txt',h:'PDCA de su proceso (converse con su grupo y responda)',f:['P · Planificar: hipótesis y causa','D · Hacer: prueba a pequeña escala','C · Verificar: comparación y cohortes','A · Actuar: estandarizar o ajustar']},
-20:{t:'sel',p:20,h:'Quiz final',i:[
-['El TO BE está listo cuando…',2,['el diagrama BPMN está aprobado','la capacitación fue realizada','personas, reglas, datos, tecnología y soporte funcionan juntos','las pruebas se ejecutaron una vez']],
-['El lanzamiento lo autoriza…',0,['el dueño del proceso, con evidencia y riesgo explícito','el equipo de TI','el analista BPM','los operadores']],
-['Controlar combina…',3,['solo seguimiento diario','solo indicadores de meta','solo auditoría','intervención operativa y evaluación histórica por cohortes']],
-['Un KPI sin fórmula, fuente, cohorte, responsable y acción…',1,['igual guía decisiones','no orienta decisiones','es válido si tiene meta','solo sirve para reportes']],
-['La mejora exige…',2,['aplicar el cambio a todo el proceso','esperar a que falle','hipótesis, prueba acotada, comparación válida y estandarización','comparar cohortes distintas']]]}
+20:{t:'sel',p:20,sh:1,h:'Quiz final: aplique lo aprendido',i:[
+['Un equipo presenta un BPMN impecable, pero no probó excepciones ni capacitó a los operadores. ¿Qué conclusión es la más defendible?',1,['El proceso puede pasar a piloto, porque el diagrama cumple la notación.','El diagrama es necesario, pero aún faltan capacidades para considerar listo el TO BE.','Solo falta simular más escenarios; lo demás se corrige ya en producción.','El dueño puede autorizar si el equipo BPM asume el riesgo por escrito.']],
+['En el caso de compras el tiempo promedio mejoró a 20 h, pero hay un defecto crítico de autorización y un operador sin capacitar. ¿Qué corresponde?',2,['Autorizar el lanzamiento general, porque el tiempo supera la meta.','Autorizar solo compras menores y corregir el defecto durante la operación.','No autorizar el lanzamiento general hasta cerrar el defecto y la capacitación.','Recalcular los KPI con los 12 casos abiertos antes de decidir.']],
+['Un supervisor revisa cada mañana los vencidos y las colas para reasignar carga. ¿Qué control ejerce y qué le falta para aprender del proceso?',0,['Seguimiento operativo; le falta evaluar cohortes y tendencias para rediseñar controles.','Evaluación histórica; le falta intervenir sobre los casos abiertos de hoy.','Seguimiento operativo; es suficiente, porque ya corrige los vencidos.','Evaluación histórica; le falta definir la meta de cada actividad.']],
+['El límite de control superior del tiempo de ciclo es 26 h y la meta de servicio es ≤24 h. Un caso cierra en 25 h. ¿Qué significa?',2,['El proceso está fuera de control y debe detenerse.','La meta se cumple, porque 25 h está dentro del límite de control.','Puede incumplir la meta sin ser una variación inusual del proceso.','El límite de control debe bajarse a 24 h para igualarlo a la meta.']],
+['El retrabajo bajó de 20 % a 12 % en un piloto que solo incluyó compras pequeñas. En la fase Verificar, ¿qué debe hacer el equipo antes de estandarizar?',0,['Comparar con cohortes equivalentes y descartar que la mejora se deba al tipo de compra.','Estandarizar de inmediato, porque la reducción ya es de ocho puntos porcentuales.','Ampliar el piloto a todo el proceso y comparar contra la línea base original.','Replantear la hipótesis y descartar el resultado del piloto.']]]}
 };
 const SC=[5,7,9,11,20];
 let sala,me,tch=false,ref,st={},loc=0,R={},N={};
@@ -69,13 +69,15 @@ function nube(){const c={};Object.values(N).forEach(w=>c[w]=(c[w]||0)+1);const m
  return`<div class="nube">${Object.entries(c).map(([w,k])=>`<span style="font-size:${20+k/m*34}px">${E(w)}</span>`).join('')||'<span class="mu">Aún sin palabras.</span>'}</div>`}
 const key=n=>'r'+sala+(me?me.c:'')+n;
 const opts=(a,it)=>it[2]||a.o;
+const sh=(o,seed)=>{let h=0;for(const c of seed)h=(h*31+c.charCodeAt(0))>>>0;const r=()=>(h=(h*1664525+1013904223)>>>0)/4294967296,a=o.map((_,j)=>j);for(let j=a.length-1;j>0;j--){const k=Math.floor(r()*(j+1));[a[j],a[k]]=[a[k],a[j]]}return a};
+const hid=n=>{const a=ACT[n];return !!(a&&a.p&&st.act&&st.act[n]&&!(st.rev&&st.rev[n])&&!(st.mostrar&&st.mostrar[n]))};
 function act(i){const n=i+1,a=ACT[n];if(!a||tch)return'';const open=st.act&&st.act[n],rev=st.rev&&st.rev[n];
  const h=`<div class="card"><h2>${a.h}${a.p?' ('+a.p+' puntos)':''}</h2>`;if(!open)return h+'<p class="mu">Actividad aún no abierta.</p></div>';
  const raw=sessionStorage[key(n)],d=raw?JSON.parse(raw):null;
  if(a.t==='nube')return h+(d?'<p class="ok">Enviado. Nube del grupo:</p>':`<input id="w1" maxlength="30" placeholder="Palabra 1"><input id="w2" maxlength="30" placeholder="Palabra 2"><input id="w3" maxlength="30" placeholder="Palabra 3"><button id="sn">Enviar</button>`)+nube()+'</div>';
  if(a.t==='txt')return h+a.f.map((f,k)=>`<label>${f}<textarea id="t${k}" rows="2" ${d?'disabled':''}>${d?E(d[k]):''}</textarea></label>`).join('')+(d?'<p class="ok">Enviado.</p>':'<button id="sv">Enviar</button>')+'</div>';
  let p=0;const body=a.i.map((it,k)=>{const o=opts(a,it),ok=d&&d.a[k]===it[1];if(ok)p+=a.p/a.i.length;
-  return`<div class="it"><p>${k+1}. ${E(it[0])}</p><select id="s${k}" ${d?'disabled':''}><option value="-1">— elegir —</option>${o.map((x,j)=>`<option value="${j}" ${d&&d.a[k]===j?'selected':''}>${E(x)}</option>`).join('')}</select>${rev&&d?` <span class="${ok?'ok':'no'}">${ok?'Correcto':'Correcta: '+E(o[it[1]])}</span>`:''}</div>`}).join('');
+  return`<div class="it"><p>${k+1}. ${E(it[0])}</p><select id="s${k}" ${d?'disabled':''}><option value="-1">— elegir —</option>${(a.sh?sh(o,me.c+n+k):o.map((_,j)=>j)).map(j=>`<option value="${j}" ${d&&d.a[k]===j?'selected':''}>${E(o[j])}</option>`).join('')}</select>${rev&&d?` <span class="${ok?'ok':'no'}">${ok?'Correcto':'Correcta: '+E(o[it[1]])}</span>`:''}</div>`}).join('');
  return h+body+(a.j?`<p>${a.j}</p><textarea id="ju" rows="3" ${d?'disabled':''}>${d?E(d.j||''):''}</textarea>`:'')+(d?`<p class="ok">Enviado.${rev?' Su puntaje: '+Math.round(p*10)/10+'/'+a.p:''}</p>`:'<button id="sv">Enviar respuestas</button>')+'</div>'}
 function bind(i){const n=i+1,a=ACT[n];if(!a||tch)return;
  if(a.t==='nube'&&$('#sn'))$('#sn').onclick=()=>{[1,2,3].map(k=>$('#w'+k).value.trim().toLowerCase()).filter(Boolean).forEach(w=>ref.child('nube').push(w));sessionStorage[key(n)]='1';draw()};
@@ -90,7 +92,7 @@ function bind(i){const n=i+1,a=ACT[n];if(!a||tch)return;
 function ctl(i){const n=i+1,a=ACT[n],o=st.act&&st.act[n],r=st.rev&&st.rev[n];
  return`<div class="bar"><button class="g" id="pv">◀</button><span class="num">${n}/${NS}</span><button class="g" id="nx">▶</button>
  ${a?`<button id="ao">${o?'Cerrar actividad':'Abrir actividad'}</button>`:''}${a&&a.p?`<button class="g" id="rv">${r?'Ocultar solución':'Revelar solución'}</button>`:''}
- <button class="g" id="lb">Modo libre: ${st.libre?'sí':'no'}</button><button class="g" id="ex">Exportar CSV</button></div>`}
+ ${a&&a.p&&o?`<button class="g" id="mo">${st.mostrar&&st.mostrar[n]?'Ocultar diapositiva':'Mostrar diapositiva'}</button>`:''}<button class="g" id="lb">Modo libre: ${st.libre?'sí':'no'}</button><button class="g" id="ex">Exportar CSV</button></div>`}
 function tres(i){const n=i+1,a=ACT[n];if(!a)return'';const r=Object.values(R[n]||{});let b='';
  if(a.t==='nube')b=nube();
  else if(a.t==='txt')b=[1,2,3,4,5,6,7,8].map(g=>{const x=r.filter(y=>y.g==g);return x.length?`<h3>Grupo ${g} (${x.length})</h3><ul>${x.map(y=>`<li>${E(y.n)}: ${a.f.map((_,k)=>E(y.f[k])).join(' | ')}</li>`).join('')}</ul>`:''}).join('')||'<p class="mu">Sin respuestas.</p>';
@@ -103,14 +105,15 @@ function csv(){const ids={};[...SC,15].forEach(n=>Object.values(R[n]||{}).forEac
  const t=rows.map(l=>l.map(c=>'"'+String(c??'').replace(/"/g,'""')+'"').join(',')).join('\n');
  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+t],{type:'text/csv'}));a.download='resultados_'+sala+'.csv';a.click()}
 function draw(){if(!ref)return;const keep={};A.querySelectorAll('input,textarea,select').forEach(e=>{if(e.id)keep[e.id]=e.value});const f0=document.activeElement&&document.activeElement.id;
- const i=tch?(st.i||0):(st.libre?loc:(st.i||0));
- A.innerHTML=(tch?ctl(i):(st.libre?'<div class="bar"><button class="g" id="pv">◀</button><button class="g" id="nx">▶</button></div>':''))+`<img class="sl" src="slides/s${i+1}.webp" alt="Diapositiva ${i+1}">`+act(i)+(tch?tres(i):'');
+ const i=tch?(st.i||0):(st.libre&&!hid((st.i||0)+1)?loc:(st.i||0));
+ A.innerHTML=(tch?ctl(i):(st.libre?'<div class="bar"><button class="g" id="pv">◀</button><button class="g" id="nx">▶</button></div>':''))+(hid(i+1)?'<div class="card"><h2>Actividad en curso</h2><p>Responda sin consultar la diapositiva. Se mostrará cuando el docente revele la solución.</p></div>':`<img class="sl" src="slides/s${i+1}.webp" alt="Diapositiva ${i+1}">`)+act(i)+(tch?tres(i):'');
  Object.keys(keep).forEach(k=>{const e=document.getElementById(k);if(e&&!e.disabled&&keep[k]!==''&&keep[k]!=='-1')e.value=keep[k]});
  if(f0&&/^(w\d|ju|t\d)$/.test(f0)&&document.getElementById(f0))document.getElementById(f0).focus();
  const go=d=>{const j=Math.max(0,Math.min(NS-1,(tch?(st.i||0):loc)+d));if(tch)ref.child('estado/i').set(j);else{loc=j;draw()}};
  if($('#pv')){$('#pv').onclick=()=>go(-1);$('#nx').onclick=()=>go(1)}
  if(tch){$('#lb').onclick=()=>ref.child('estado/libre').set(!st.libre);$('#ex').onclick=csv;
   if($('#ao'))$('#ao').onclick=()=>ref.child('estado/act/'+(i+1)).set(!(st.act&&st.act[i+1]));
+  if($('#mo'))$('#mo').onclick=()=>ref.child('estado/mostrar/'+(i+1)).set(!(st.mostrar&&st.mostrar[i+1]));
   if($('#rv'))$('#rv').onclick=()=>ref.child('estado/rev/'+(i+1)).set(!(st.rev&&st.rev[i+1]))}
  bind(i)}
 document.addEventListener('keydown',e=>{if(!tch||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;
